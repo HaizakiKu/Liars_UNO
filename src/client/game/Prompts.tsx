@@ -108,7 +108,7 @@ export function Controls({ onPlayDrawn }: { onPlayDrawn: () => void }) {
     <div className="controls">
       <div className={`me-badge ${myTurn ? "is-turn" : ""}`}>
         <div className="me-avatar">
-          {myTurn && <Ring key={g.turnId} deadline={g.deadline} total={g.settings.turnSeconds * 1000} size={54} stroke={3} />}
+          {myTurn && <Ring key={`${g.turnId}-${g.deadline}`} deadline={g.deadline} total={g.settings.turnSeconds * 1000} size={54} stroke={3} />}
           <Avatar name={seat.name} index={seat.avatar} size={42} />
           <SeatFx pid={me} />
         </div>

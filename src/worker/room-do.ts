@@ -60,6 +60,8 @@ interface RoomData {
   settings: RoomSettings;
   seats: Seat[];
   spectators: Spectator[];
+  /** Player ids the host removed; they may not rejoin this room. */
+  banned?: string[];
   scores: Record<string, number>;
   dealer: number;
   round: number;
@@ -107,6 +109,10 @@ export class RoomDO extends DurableObject<Env> {
 
   private get fast() {
     return this.env.FAST_TIMERS === "1";
+  }
+
+  private grace(ms: number) {
+    return this.fast ? ms / 10 : ms;
   }
 
   // ───────────────────────── RPC (called by the Worker) ─────────────────────────
@@ -222,6 +228,11 @@ export class RoomDO extends DurableObject<Env> {
     const now = Date.now();
     const tokenHash = await sha256(msg.token);
     const name = msg.name || "Player";
+    if (r.banned?.includes(msg.pid)) {
+      this.send(ws, { t: "kicked" });
+      ws.close(4403, "kicked");
+      return;
+    }
     const seat = r.seats.find((s) => s.id === msg.pid);
     const spec = r.spectators.find((s) => s.id === msg.pid);
     if (seat) {
@@ -322,6 +333,8 @@ export class RoomDO extends DurableObject<Env> {
       case "kick": {
         if (!isHost) return this.send(ws, { t: "error", code: "notHost" });
         if (r.status !== "lobby" || msg.pid === pid) return this.send(ws, { t: "error", code: "cannotKick" });
+        const kickedHuman = r.seats.some((s) => s.id === msg.pid && !s.isBot) || r.spectators.some((s) => s.id === msg.pid);
+        if (kickedHuman) r.banned = [...(r.banned ?? []), msg.pid].slice(-50);
         r.seats = r.seats.filter((s) => s.id !== msg.pid);
         r.spectators = r.spectators.filter((s) => s.id !== msg.pid);
         for (const s of this.socketsOf(msg.pid)) {
@@ -522,14 +535,15 @@ export class RoomDO extends DurableObject<Env> {
   }
 
   /** Recomputes housekeeping after any change, then persists, broadcasts and re-arms the alarm. */
-  private async afterChange(events: GameEvent[]) {
+  private async afterChange(events: GameEvent[], opts: { quiet?: boolean } = {}) {
     const r = this.room!;
     const now = Date.now();
     const online = this.humansOnline();
+    const hostBefore = r.hostId;
 
     // Host must be a seated human; prefer someone connected.
     const host = r.seats.find((s) => s.id === r.hostId && !s.isBot && !s.left);
-    const hostAway = host && !host.connected && now - (host.disconnectedAt ?? now) > HOST_GRACE_MS;
+    const hostAway = host && !host.connected && now - (host.disconnectedAt ?? now) > this.grace(HOST_GRACE_MS);
     if (!host || hostAway) {
       const candidates = r.seats.filter((s) => !s.isBot && !s.left).sort((a, b) => a.joinedAt - b.joinedAt);
       const next = candidates.find((s) => s.connected) ?? candidates[0];
@@ -554,7 +568,7 @@ export class RoomDO extends DurableObject<Env> {
     }
 
     await this.save();
-    this.broadcast(events);
+    if (!opts.quiet || events.length > 0 || r.hostId !== hostBefore) this.broadcast(events);
     await this.publishLobby(false);
     await this.armAlarm();
   }
@@ -571,9 +585,11 @@ export class RoomDO extends DurableObject<Env> {
       if (r.game?.deadline) times.push(r.game.deadline);
       if (r.nextRoundAt) times.push(r.nextRoundAt);
       if (r.lobbyRefreshAt) times.push(r.lobbyRefreshAt);
+      // Wake up once when a disconnected player's grace period ends (seat drop / host hand-over).
       for (const s of r.seats) {
         if (s.disconnectedAt && !s.connected && !s.isBot) {
-          times.push(s.disconnectedAt + (r.status === "lobby" ? SEAT_GRACE_MS : HOST_GRACE_MS) + 50);
+          const t = s.disconnectedAt + this.grace(r.status === "lobby" ? SEAT_GRACE_MS : HOST_GRACE_MS) + 50;
+          if (t > now) times.push(t);
         }
       }
     }
@@ -592,7 +608,7 @@ export class RoomDO extends DurableObject<Env> {
     // Drop humans who disconnected from the waiting room a while ago.
     if (r.status === "lobby") {
       const before = r.seats.length;
-      r.seats = r.seats.filter((s) => s.isBot || s.connected || now - (s.disconnectedAt ?? now) < SEAT_GRACE_MS);
+      r.seats = r.seats.filter((s) => s.isBot || s.connected || now - (s.disconnectedAt ?? now) < this.grace(SEAT_GRACE_MS));
       if (r.seats.length !== before) {
         await this.afterChange([]);
         return;
@@ -620,7 +636,8 @@ export class RoomDO extends DurableObject<Env> {
     if (r.botAt && now >= r.botAt) {
       if (await this.runPlannedBot(now)) return;
     }
-    await this.afterChange([]);
+    // Housekeeping only (lobby refresh, grace checks, re-planning): no need to re-send state.
+    await this.afterChange([], { quiet: true });
   }
 
   private async destroy(reason: string) {

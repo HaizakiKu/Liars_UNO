@@ -75,6 +75,7 @@ async function pump() {
 }
 
 function settleTime(events: GameEvent[]): number {
+  if (events.length === 0) return 0;
   if (reducedMotion()) return 80;
   let ms = 100;
   for (const e of events) {

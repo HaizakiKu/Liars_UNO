@@ -57,7 +57,7 @@ export function Seat({ pid, x, y }: { pid: string; x: number; y: number }) {
       data-testid={`seat-${seat.name}`}
     >
       <div className="seat-avatar">
-        {isCurrent && <Ring key={g.turnId} deadline={g.deadline} total={g.settings.turnSeconds * 1000} size={66} stroke={3.5} className="seat-ring" />}
+        {isCurrent && <Ring key={`${g.turnId}-${g.deadline}`} deadline={g.deadline} total={g.settings.turnSeconds * 1000} size={66} stroke={3.5} className="seat-ring" />}
         <Avatar name={seat.name} index={seat.avatar} size={52} />
         {seat.isBot && (
           <span className="seat-badge is-bot" title={t.bot}>

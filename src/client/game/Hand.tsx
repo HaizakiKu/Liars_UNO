@@ -16,6 +16,21 @@ export function useViewport() {
   return size;
 }
 
+const COLOR_ORDER: Record<string, number> = { red: 0, yellow: 1, green: 2, blue: 3 };
+const VALUE_ORDER = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2", "wild4", "wlc"];
+
+/** Hand order: by color, then value, Regular before Liar's; wilds last. */
+function compareCards(a: Card, b: Card) {
+  const ca = a.color ? COLOR_ORDER[a.color] : 9;
+  const cb = b.color ? COLOR_ORDER[b.color] : 9;
+  if (ca !== cb) return ca - cb;
+  const va = VALUE_ORDER.indexOf(a.value);
+  const vb = VALUE_ORDER.indexOf(b.value);
+  if (va !== vb) return va - vb;
+  if (a.liar !== b.liar) return a.liar ? 1 : -1;
+  return a.id < b.id ? -1 : 1;
+}
+
 export function handCardWidth(w: number, h: number) {
   if (w < 520) return Math.max(58, Math.min(72, w * 0.17));
   return Math.max(76, Math.min(112, w * 0.075, h * 0.13));
@@ -130,7 +145,7 @@ export function Hand({ onPick }: { onPick: (card: Card, alt: boolean) => void })
   const origins = useGame((s) => s.handOrigin);
   const { w, h } = useViewport();
   const [el, setEl] = useState<HTMLDivElement | null>(null);
-  const cards = g.hand;
+  const cards = [...g.hand].sort(compareCards);
   const n = cards.length;
   const cw = handCardWidth(w, h);
   const maxSpan = Math.min(w - 32, 1000);

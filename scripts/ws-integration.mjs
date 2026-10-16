@@ -82,12 +82,24 @@ class Client {
 }
 
 async function main() {
+  const busy = await fetch(`${BASE}/api/lobby`).then(() => true, () => false);
+  if (busy) throw new Error(`port ${PORT} is already in use — stop the other server first`);
   console.log("starting wrangler dev…");
   const wr = spawn(
     "npx",
     ["wrangler", "dev", "-c", "dist/liars_uno/wrangler.json", "--port", String(PORT), "--var", "FAST_TIMERS:1", "--ip", "127.0.0.1"],
-    { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, CI: "1" } },
+    { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, CI: "1" }, detached: true },
   );
+  // Kill the whole process group (npx → wrangler → workerd), also on Ctrl-C / timeout.
+  const stop = () => {
+    try {
+      process.kill(-wr.pid, "SIGTERM");
+    } catch {
+      /* already gone */
+    }
+  };
+  process.on("exit", stop);
+  for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => process.exit(130));
   let log = "";
   wr.stdout.on("data", (d) => (log += d));
   wr.stderr.on("data", (d) => (log += d));
@@ -104,8 +116,11 @@ async function main() {
   }
   try {
     await run();
+  } catch (e) {
+    console.log("--- wrangler log (tail) ---\n" + log.slice(-3000));
+    throw e;
   } finally {
-    wr.kill("SIGTERM");
+    stop();
   }
   if (failures > 0) {
     console.log(`\n${failures} check(s) failed`);
@@ -229,6 +244,30 @@ async function run() {
   A.send({ t: "lobby" });
   await waitFor(() => A.room.status === "lobby");
   check(A.room.status === "lobby", "host returns room to lobby");
+
+  console.log("abandoned seat does not cause an update storm");
+  {
+    const r2 = await (await fetch(`${BASE}/api/rooms`, { method: "POST", body: JSON.stringify({ name: "Storm", isPublic: false }) })).json();
+    const H = new Client("Hana");
+    const G = new Client("Gus");
+    await H.connect(r2.code);
+    await waitFor(() => H.room);
+    await G.connect(r2.code);
+    await waitFor(() => H.room.seats.length === 2);
+    H.send({ t: "addBot" });
+    await waitFor(() => H.room.seats.length === 3);
+    H.send({ t: "settings", s: { turnSeconds: 60 } });
+    await sleep(200);
+    H.send({ t: "start" });
+    await waitFor(() => H.room.status === "playing");
+    G.send({ t: "leave" });
+    await sleep(4500); // past the (fast) 3s grace period
+    const before = H.messages;
+    await sleep(3000);
+    const rate = H.messages - before;
+    check(rate < 15, `idle room sends few updates after a player left (${rate} in 3s)`);
+    H.send({ t: "leave" });
+  }
 
   console.log("quick join");
   const qj = await (await fetch(`${BASE}/api/quick-join`, { method: "POST", body: "{}" })).json();
