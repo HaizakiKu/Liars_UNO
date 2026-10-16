@@ -1,0 +1,323 @@
+/* ───────────── Card faces (original artwork, CSS only) ───────────── */
+
+.c-red { --c: var(--red); --c-l: #ff8589; --c-d: #a8242a; --c-glow: rgba(229, 72, 77, 0.55); }
+.c-yellow { --c: var(--yellow); --c-l: #ffd98a; --c-d: #c4850f; --c-glow: rgba(245, 184, 61, 0.5); }
+.c-green { --c: var(--green); --c-l: #63d49c; --c-d: #18653f; --c-glow: rgba(48, 164, 108, 0.55); }
+.c-blue { --c: var(--blue); --c-l: #7d98ff; --c-d: #2440a3; --c-glow: rgba(62, 99, 221, 0.6); }
+.c-wild { --c: #f5f1e8; --c-glow: rgba(255, 255, 255, 0.25); }
+
+.cface,
+.cback {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10% / 6.67%;
+  overflow: hidden;
+  container-type: inline-size;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 8px 18px -6px rgba(0, 0, 0, 0.6);
+}
+
+.cface-frame {
+  position: absolute;
+  inset: 4.5cqw;
+  border-radius: 7cqw;
+}
+
+/* Regular: saturated face, white frame, white tilted oval */
+.cface.is-regular {
+  background:
+    radial-gradient(130% 80% at 20% 0%, rgba(255, 255, 255, 0.28), transparent 55%),
+    linear-gradient(160deg, var(--c-l) 0%, var(--c) 45%, var(--c-d) 100%);
+}
+.cface.is-regular .cface-frame {
+  border: 1.5cqw solid rgba(255, 255, 255, 0.92);
+}
+
+.coval {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 118cqw;
+  height: 62cqw;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(-56deg);
+  display: grid;
+  place-items: center;
+}
+.is-regular .coval {
+  background: #fffdf8;
+  box-shadow:
+    inset 0 -2.5cqw 5cqw rgba(0, 0, 0, 0.12),
+    0 0 0 1cqw rgba(0, 0, 0, 0.08);
+}
+
+.cval {
+  transform: rotate(56deg);
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.cval-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 52cqw;
+  letter-spacing: -0.04em;
+}
+.cval-plus {
+  font-size: 40cqw;
+}
+.is-regular .cval {
+  color: var(--c);
+  -webkit-text-stroke: 1.3cqw rgba(0, 0, 0, 0.6);
+  paint-order: stroke fill;
+  filter: drop-shadow(1.6cqw 1.6cqw 0 rgba(0, 0, 0, 0.35));
+}
+.cicon {
+  width: 48cqw;
+  height: 48cqw;
+}
+.cicon-bubble {
+  width: 40cqw;
+  height: 40cqw;
+}
+
+.cidx {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15cqw;
+  line-height: 1;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  text-shadow: 0.8cqw 0.8cqw 0 rgba(0, 0, 0, 0.35);
+}
+.cidx .cicon {
+  width: 14cqw;
+  height: 14cqw;
+}
+.cidx-tl {
+  top: 4cqw;
+  left: 5cqw;
+}
+.cidx-br {
+  bottom: 4cqw;
+  right: 5cqw;
+  transform: rotate(180deg);
+}
+.cmark {
+  position: absolute;
+  top: 5.5cqw;
+  right: 6cqw;
+  width: 9cqw;
+  height: 9cqw;
+  color: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 0.6cqw 0 rgba(0, 0, 0, 0.3));
+}
+
+/* Liar's Card: charcoal, pinstriped, neon frame, circled indices, mask emblem */
+.cface.is-liar {
+  background: radial-gradient(120% 90% at 30% 0%, #2c2e36 0%, #15161b 62%, #0d0e11 100%);
+}
+.cface.is-liar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 1cqw, transparent 1cqw 3.4cqw);
+  pointer-events: none;
+}
+.is-liar .cface-frame {
+  border: 1.3cqw solid var(--c);
+  box-shadow:
+    inset 0 0 5cqw var(--c-glow),
+    0 0 3.5cqw var(--c-glow);
+}
+.is-liar .coval {
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.5));
+  border: 1.2cqw solid var(--c);
+  box-shadow:
+    inset 0 0 6cqw var(--c-glow),
+    0 0 4cqw var(--c-glow);
+}
+.is-liar .cval {
+  color: var(--c);
+  filter: drop-shadow(0 0 3.5cqw var(--c-glow));
+}
+.is-liar .cidx {
+  width: 19cqw;
+  height: 19cqw;
+  border-radius: 50%;
+  border: 1cqw solid var(--c);
+  color: var(--c);
+  font-size: 11cqw;
+  text-shadow: none;
+  background: rgba(0, 0, 0, 0.35);
+}
+.is-liar .cidx .cicon {
+  width: 11cqw;
+  height: 11cqw;
+}
+.is-liar .cmark {
+  color: var(--c);
+}
+.cmask {
+  position: absolute;
+  left: 6cqw;
+  bottom: 7cqw;
+  width: 21cqw;
+  color: var(--c);
+  filter: drop-shadow(0 0 2cqw var(--c-glow));
+}
+
+/* Wild Draw 4 (Liar's) */
+.c-wild.is-liar .cface-frame {
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 5cqw rgba(255, 255, 255, 0.12);
+}
+.c-wild .coval {
+  background: conic-gradient(from 20deg, var(--red) 0 25%, var(--yellow) 0 50%, var(--green) 0 75%, var(--blue) 0);
+  border: none;
+  box-shadow:
+    inset 0 0 0 1.4cqw rgba(0, 0, 0, 0.35),
+    0 0 6cqw rgba(255, 255, 255, 0.15);
+}
+.c-wild.is-liar .coval::after {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  background: #121317;
+  box-shadow: inset 0 0 4cqw rgba(0, 0, 0, 0.6);
+}
+.c-wild .cval {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  filter: drop-shadow(0 0 3cqw rgba(255, 255, 255, 0.35));
+}
+.c-wild .cidx {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+.c-wild .cmask {
+  color: #fff;
+}
+
+/* Wild Liar's Challenge (Regular — always face up) */
+.cface.is-wlc {
+  background: radial-gradient(120% 80% at 30% 0%, #2a2b30 0%, #0c0d10 70%);
+}
+.is-wlc .cface-frame {
+  border: 1.5cqw solid rgba(255, 255, 255, 0.85);
+}
+.is-wlc .coval {
+  width: 104cqw;
+  height: 70cqw;
+}
+.is-wlc .cval {
+  color: #fff;
+}
+.is-wlc .cicon-bubble {
+  color: #fffdf6;
+  filter: drop-shadow(0 1.5cqw 2cqw rgba(0, 0, 0, 0.5));
+}
+.cwlc-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 13cqw;
+  text-align: center;
+  font: 800 6cqw/1 var(--font-display);
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.85);
+  transform: rotate(0);
+}
+
+/* Chosen color for played wilds */
+.cface[class*="chosen-"] {
+  box-shadow:
+    0 0 0 0.35em var(--chosen),
+    0 0 1.6em var(--chosen),
+    0 8px 18px -6px rgba(0, 0, 0, 0.6);
+}
+.chosen-red { --chosen: var(--red); }
+.chosen-yellow { --chosen: var(--yellow); }
+.chosen-green { --chosen: var(--green); }
+.chosen-blue { --chosen: var(--blue); }
+
+/* Back */
+.cback {
+  background:
+    radial-gradient(120% 90% at 50% 0%, #4a1219 0%, #1d080c 60%, #120508 100%);
+}
+.cback::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(45deg, rgba(229, 72, 77, 0.08) 0 1cqw, transparent 1cqw 4cqw),
+    repeating-linear-gradient(-45deg, rgba(229, 72, 77, 0.06) 0 1cqw, transparent 1cqw 4cqw);
+}
+.cback-frame {
+  position: absolute;
+  inset: 4.5cqw;
+  border-radius: 7cqw;
+  border: 1.1cqw solid rgba(242, 200, 107, 0.55);
+}
+.cback-oval {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 104cqw;
+  height: 56cqw;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(-32deg);
+  background: linear-gradient(160deg, #ff6b70, var(--red) 45%, #9d1f25);
+  box-shadow:
+    0 0 0 1.2cqw rgba(242, 200, 107, 0.65),
+    0 3cqw 8cqw rgba(0, 0, 0, 0.5),
+    inset 0 -3cqw 6cqw rgba(0, 0, 0, 0.25);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1cqw;
+}
+.cback-word {
+  font: 800 24cqw/0.9 var(--font-display);
+  letter-spacing: -0.02em;
+  color: #fbe9c3;
+  text-shadow: 1.2cqw 1.6cqw 0 rgba(60, 0, 6, 0.6);
+  transform: skewX(-8deg);
+}
+.cback-mask {
+  width: 18cqw;
+  color: #fbe9c3;
+  opacity: 0.85;
+}
+
+/* 3D flip container */
+.card3d {
+  perspective: 900px;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+}
+.card3d-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.card3d-side {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.card3d-back {
+  transform: rotateY(180deg);
+}
