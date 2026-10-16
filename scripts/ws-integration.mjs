@@ -87,7 +87,7 @@ async function main() {
   console.log("starting wrangler dev…");
   const wr = spawn(
     "npx",
-    ["wrangler", "dev", "-c", "dist/liars_uno/wrangler.json", "--port", String(PORT), "--var", "FAST_TIMERS:1", "--ip", "127.0.0.1"],
+    ["wrangler", "dev", "-c", "dist/liars_uno/wrangler.json", "--port", String(PORT), "--var", "FAST_TIMERS:1", "--ip", "127.0.0.1", "--persist-to", ".wrangler/state-ws"],
     { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, CI: "1" }, detached: true },
   );
   // Kill the whole process group (npx → wrangler → workerd), also on Ctrl-C / timeout.

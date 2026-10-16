@@ -17,7 +17,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `npx wrangler dev -c dist/liars_uno/wrangler.json --port ${PORT} --ip 127.0.0.1`,
+    command: `npx wrangler dev -c dist/liars_uno/wrangler.json --port ${PORT} --ip 127.0.0.1 --persist-to .wrangler/state-e2e`,
     url: `http://127.0.0.1:${PORT}/api/lobby`,
     reuseExistingServer: true,
     timeout: 120_000,
